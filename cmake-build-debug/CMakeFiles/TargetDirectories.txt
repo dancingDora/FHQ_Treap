@@ -1,0 +1,3 @@
+/Users/luyifan/Desktop/2023Spr/highLevelDataSructure_lesson/ads-lab1/cmake-build-debug/CMakeFiles/executable.dir
+/Users/luyifan/Desktop/2023Spr/highLevelDataSructure_lesson/ads-lab1/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/luyifan/Desktop/2023Spr/highLevelDataSructure_lesson/ads-lab1/cmake-build-debug/CMakeFiles/rebuild_cache.dir
