@@ -6,8 +6,7 @@
 #include <fstream>
 #include "treap.h"
 #include "util.h"
-const int TEST_NUM = 3;
-
+//const int TEST_NUM = 4;
 void generate_output(Treap<int32_t>& treap, int32_t round) {
     int32_t n, op, val;
 

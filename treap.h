@@ -140,6 +140,7 @@ public:
             res->count++;
             res->size++;
             size++;
+            return true;
         }
     }
 
@@ -261,7 +262,7 @@ public:
         while (now) {
             {//看看可不可以直接找到这个数
                 if (now->left) {
-                    if (now->left->size + now->count <= rk && now->left->size + 1 >= rk)//修改，因为只要在区间里就返回
+                    if (rk <= now->left->size + now->count && rk >= now->left->size + 1)//修改，因为只要在区间里就返回
                         break;
                 } else {
                     if (1 <= rk && rk <= now->count)

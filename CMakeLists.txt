@@ -9,3 +9,4 @@ option(TEST_NUM "Test number" OFF)
 if(TEST_NUM)
     add_definitions(-DTEST_NUM=${TEST_NUM})
 endif()
+
