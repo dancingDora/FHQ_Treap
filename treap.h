@@ -10,7 +10,7 @@
 
 using namespace std;
 
-const unsigned MAX_SIZE = 10000000;
+//const unsigned MAX_SIZE = 10000000;
 
 class RandGenerator {
 private:
@@ -53,6 +53,7 @@ public:
               int32_t count, int32_t size, uint32_t weight) :
             val(val), left(left), right(right),
             count(count), size(size), weight(weight) {}
+
 //private:
 //    T val;
 //    int left;
@@ -71,11 +72,6 @@ public:
 //            val(val), left(left), right(right),
 //            count(count), size(size), weight(weight) {};
 
-    void clear() {
-        left = right = count = size = weight = 0;
-        val = T();
-    }
-
 };
 
 template<typename T>
@@ -90,15 +86,12 @@ private:
 
     TreapNode<T> *treap_root = nullptr;
 
-    TreapNode<T> *treap_x = nullptr;
-    TreapNode<T> *treap_y = nullptr;
-    TreapNode<T> *treap_z = nullptr;
-    TreapNode<T> *treap_cur = nullptr;
+    int size = 0;
 public:
     void update(TreapNode<T> *x) {
         int ll = (x->left) ? x->left->size : 0;
         int rr = (x->right) ? x->right->size : 0;
-        x->size = ll + rr + 1;
+        x->size = ll + rr + x->count;
     }
 
     void split(TreapNode<T> *now, T v, TreapNode<T> **x, TreapNode<T> **y) {
@@ -133,33 +126,80 @@ public:
     }
 
     TreapNode<T> *search(TreapNode<T> *x, T v) {
-        if(x == nullptr) return nullptr;
+        if (x == nullptr) return nullptr;
         TreapNode<T> *newNode = x;
-        if(newNode->val == v) return newNode;
-        else if(newNode->val < v) return search(newNode->right, v);
-        else if(newNode->val > v) return search(newNode->left, v);
+        if (newNode->val == v) return newNode;
+        else if (newNode->val < v) return search(newNode->right, v);
+        else if (newNode->val > v) return search(newNode->left, v);
     };
 
+    bool searchIns(T v) {
+        TreapNode<T> *res = search(treap_root, v);
+        if (res == nullptr) return false;
+        else {
+            res->count++;
+            res->size++;
+            size++;
+        }
+    }
+
+    bool searchDel(T v) {
+        if (treap_root == nullptr) return true;
+        TreapNode<T> *res = search(treap_root, v);
+        if (res == nullptr || res->count == 1) return false;
+        else {
+            res->count--;
+            res->size--;
+            size--;
+            return true;
+        }
+    }
+
+    bool find(T v) {
+        TreapNode<T> *res = search(treap_root, v);
+        return (res != nullptr);
+    }
+
+//    T MIN() {
+//        if (treap_root == nullptr) return -1;
+//        TreapNode<T> *res = treap_root->right;
+//        if (res == nullptr) return treap_root->val;
+//        while (res->right) res = res->right;
+//        return res->val;
+//    }
+
+//    T MAX() {
+//        if (treap_root == nullptr) return -1;
+//        TreapNode<T> *res = treap_root->left;
+//        if (res == nullptr) return treap_root->val;
+//        while (res->left) res = res->left;
+//        return res->val;
+//    }
 
     TreapNode<T> *newNode(T x) {
-        TreapNode<T> *newNode = new TreapNode<T>(x, nullptr, nullptr, 0, 1, 0);
-        newNode->weight = rand.treap_rand();
-        newNode->count = 1;
-        return newNode;
+        auto *node = new TreapNode<T>(x, nullptr, nullptr, 0, 1, 0);
+        node->weight = rand.treap_rand();
+        node->count = 1;
+        return node;
     }
 
     void insert(T val) {
+        if (searchIns(val)) return;
         TreapNode<T> *x = nullptr;
         TreapNode<T> *y = nullptr;
         /* Your code here. */
         split(treap_root, val, &x, &y);
         TreapNode<T> *res = merge(x, newNode(val));
         treap_root = merge(res, y);
+        size++;
     }
 
     void remove(T val) {
         /* Your code here. */
 //        int x, y, z;
+        if (!find(val)) return;
+        if (!find(val)) return;
+        if (searchDel(val)) return;
         TreapNode<T> *x = nullptr;
         TreapNode<T> *y = nullptr;
         TreapNode<T> *z = nullptr;
@@ -168,30 +208,33 @@ public:
         split(x, val - 1, &x, &y);
         y = merge(y->left, y->right);
         treap_root = merge(merge(x, y), z);
+        size--;
     }
 
     T pre_element(T val) {
         /* Your code here. */
+//        if(!find(val)) return -1;
+//        if(val <= MIN()) return -1;
         TreapNode<T> *x = nullptr;
         TreapNode<T> *y = nullptr;
-        TreapNode<T> *cur = nullptr;
         split(treap_root, val - 1, &x, &y);
-        cur = x;
+        TreapNode<T> *cur = x;
+        if (cur == nullptr) return -1;
         while (cur->right) cur = cur->right;
         merge(x, y);
         return cur->val;
     }
 
     T suc_element(T val) {
+//        if(val >= MAX()) return -1;
         /* Your code here. */
         TreapNode<T> *x = nullptr;
         TreapNode<T> *y = nullptr;
-        TreapNode<T> *cur = nullptr;
         split(treap_root, val, &x, &y);
-        cur = y;
-        if(cur == nullptr) {
+        TreapNode<T> *cur = y;
+        if (cur == nullptr) {
             merge(x, y);
-            return cur->val;
+            return -1;
         }
         while (cur->left) cur = cur->left;
         treap_root = merge(x, y);
@@ -201,6 +244,7 @@ public:
     int32_t rank(T val) {
         /* Your code here. */
 //        int x, y, ans;
+        if (!find(val)) return -1;
         TreapNode<T> *x;
         TreapNode<T> *y;
         int32_t ans;
@@ -212,48 +256,73 @@ public:
 
     int32_t kth_element(int32_t rk) {
         /* Your code here. */
+        if (rk > size) return -1;
         TreapNode<T> *now = treap_root;
         while (now) {
-            if (now->left)
-                if (now->left->size + 1 == rk)
-                    break;
-                else if (now->left->size >= rk)
-                    now = now->left;
-                else {
-                    rk -= now->left->size + 1;
-                    now = now->right;
+            {//看看可不可以直接找到这个数
+                if (now->left) {
+                    if (now->left->size + now->count <= rk && now->left->size + 1 >= rk)//修改，因为只要在区间里就返回
+                        break;
+                } else {
+                    if (1 <= rk && rk <= now->count)
+                        break;
                 }
-            else if (1 == rk) break;
-
+            }
+            //到了这里说明没找到，就要跳
+            if (now->left && now->left->size >= rk) //左边能跳就往左跳
+                now = now->left;
+            else {//左边跳不了又不是当前节点，那就无脑往右跳
+                if (now->left)
+                    rk -= now->left->size + now->count;
+                else
+                    rk -= now->count;
+                now = now->right;
+            }
+//            if (1 == rk) break;
         }
         return now->val;
     }
 
+    void destroyTree(TreapNode<T> *node) {
+        if (node == nullptr) {
+            return;
+        }
+        destroyTree(node->left);
+        destroyTree(node->right);
+        delete node;
+    }
+
     void clear() {
         /* Your code here. */
-        treap_root = nullptr;
+//        destroyTree(treap_root);
+        destroyTree(treap_root);
+        treap_root->left = NULL;
+        treap_root->right = NULL;
+        treap_root = NULL;
+        size = 0;
+        rand.reset();
     }
 
     std::string pre_traverse() {
 //        return "its ok.\n";
         /* Your code here. */
-        if (treap_root == nullptr) return "";
-        int cnt = 0;
+        if (treap_root == nullptr) return "empty";
+//        int cnt = 0;
         stack<TreapNode<T>> ss;
         while (!ss.empty())ss.pop();
-        string res = "";
+        string res;
         ss.push(*treap_root);
         while (!ss.empty()) {
             TreapNode<T> node = ss.top();
             ss.pop();
             res = res + to_string(node.val) + " ";
-            cout << "res : " << res << " cnt = "<< ++cnt << endl;
+//            cout << "res : " << res << " cnt = "<< ++cnt << endl;
             if (node.right != nullptr) {
-                cout << "in r\n";
+//                cout << "in r\n";
                 ss.push(*node.right);
             }
             if (node.left != nullptr) {
-                cout << "in l\n";
+//                cout << "in l\n";
                 ss.push(*node.left);
             }
         }
