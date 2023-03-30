@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_BUILD_TYPE "Debug")
 
 add_executable(executable test.cc)
-
+#add_executable(executable main.cpp)
 option(TEST_NUM "Test number" OFF)
 if(TEST_NUM)
     add_definitions(-DTEST_NUM=${TEST_NUM})

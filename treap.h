@@ -44,6 +44,8 @@ private:
     int32_t size; /* number of nodes in current subtree */
     uint32_t weight;
 
+    uint32_t height;
+
     friend class Treap<T>;
 
 public:
@@ -73,7 +75,11 @@ public:
 //            count(count), size(size), weight(weight) {};
 
 };
-
+static inline uint64_t rdtsc() {
+    uint32_t low, high;
+    asm volatile ("rdtsc" : "=a" (low), "=d" (high));
+    return ((uint64_t) high << 32) | low;
+}
 template<typename T>
 class Treap {
 
@@ -88,9 +94,17 @@ private:
 
     int size = 0;
 public:
+    int mergeTime = 0;
+    int mergeNum = 0;
+    int splitTime = 0;
+    int splitNum = 0;
+public:
     void update(TreapNode<T> *x) {
         int ll = (x->left) ? x->left->size : 0;
+        int hll = (x->left) ? x->left->height : 0;
+        int hrr = (x->right) ? x->right->height : 0;
         int rr = (x->right) ? x->right->size : 0;
+        x->height = max(hll, hrr) + 1;
         x->size = ll + rr + x->count;
     }
 
@@ -131,7 +145,7 @@ public:
         if (newNode->val == v) return newNode;
         else if (newNode->val < v) return search(newNode->right, v);
         else if (newNode->val > v) return search(newNode->left, v);
-    };
+    }
 
     bool searchIns(T v) {
         TreapNode<T> *res = search(treap_root, v);
@@ -181,6 +195,7 @@ public:
         auto *node = new TreapNode<T>(x, nullptr, nullptr, 0, 1, 0);
         node->weight = rand.treap_rand();
         node->count = 1;
+        node->height = 1;
         return node;
     }
 
@@ -189,10 +204,22 @@ public:
         TreapNode<T> *x = nullptr;
         TreapNode<T> *y = nullptr;
         /* Your code here. */
+        splitNum++;
+        int a = rdtsc();
         split(treap_root, val, &x, &y);
+        int b = rdtsc();
+        splitTime += (b - a);
+        mergeNum += 2;
+        a = rdtsc();
         TreapNode<T> *res = merge(x, newNode(val));
         treap_root = merge(res, y);
+        b = rdtsc();
+        mergeTime += (b - a);
         size++;
+    }
+
+    int height() {
+        return treap_root->height;
     }
 
     void remove(T val) {
@@ -204,11 +231,18 @@ public:
         TreapNode<T> *x = nullptr;
         TreapNode<T> *y = nullptr;
         TreapNode<T> *z = nullptr;
-
+        splitNum += 2;
+        int a = rdtsc();
         split(treap_root, val, &x, &z);
         split(x, val - 1, &x, &y);
+        int b = rdtsc();
+        splitTime += (b - a);
+        mergeNum += 3;
+        a = rdtsc();
         y = merge(y->left, y->right);
         treap_root = merge(merge(x, y), z);
+        b = rdtsc();
+        mergeTime += (b - a);
         size--;
     }
 
@@ -218,11 +252,19 @@ public:
 //        if(val <= MIN()) return -1;
         TreapNode<T> *x = nullptr;
         TreapNode<T> *y = nullptr;
+        splitNum++;
+        int a = rdtsc();
         split(treap_root, val - 1, &x, &y);
+        int b = rdtsc();
+        splitTime += (b - a);
         TreapNode<T> *cur = x;
         if (cur == nullptr) return -1;
         while (cur->right) cur = cur->right;
+        mergeNum++;
+        a = rdtsc();
         merge(x, y);
+        b = rdtsc();
+        mergeTime += (b - a);
         return cur->val;
     }
 
@@ -231,14 +273,26 @@ public:
         /* Your code here. */
         TreapNode<T> *x = nullptr;
         TreapNode<T> *y = nullptr;
+        splitNum++;
+        int a = rdtsc();
         split(treap_root, val, &x, &y);
+        int b = rdtsc();
+        splitTime += (b - a);
         TreapNode<T> *cur = y;
         if (cur == nullptr) {
+            mergeNum ++;
+            a = rdtsc();
             merge(x, y);
+            b = rdtsc();
+            mergeTime += (b - a);
             return -1;
         }
         while (cur->left) cur = cur->left;
+        mergeNum ++ ;
+        a = rdtsc();
         treap_root = merge(x, y);
+        b = rdtsc();
+        mergeTime += (b - a);
         return cur->val;
     }
 
@@ -249,9 +303,17 @@ public:
         TreapNode<T> *x;
         TreapNode<T> *y;
         int32_t ans;
+        splitNum++;
+        int a = rdtsc();
         split(treap_root, val - 1, &x, &y);
+        int b = rdtsc();
+        splitTime += (b - a);
         ans = x->size + 1;
+        mergeNum ++;
+        a = rdtsc();
         merge(x, y);
+        b = rdtsc();
+        mergeTime += (b - a);
         return ans;
     }
 
@@ -301,6 +363,10 @@ public:
         treap_root->right = NULL;
         treap_root = NULL;
         size = 0;
+        mergeTime = 0;
+        mergeNum = 0;
+        splitTime = 0;
+        splitNum = 0;
         rand.reset();
     }
 
@@ -330,3 +396,4 @@ public:
         return res;
     }
 };
+
